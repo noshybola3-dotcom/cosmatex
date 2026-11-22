@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="manifest.json">
+<title>كتالوج الكوزمتكس</title>
+<style>
+:root{--bg:#f3f6f7;--card:#fff;--ink:#172b2b;--muted:#718080;--brand:#0f766e;--brand2:#115e59;--line:#e3ebea;--soft:#e7f4f2;--danger:#c0392b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif}
+header{background:linear-gradient(135deg,#0f766e,#134e4a);color:#fff;padding:22px 16px 18px;border-radius:0 0 22px 22px}
+.wrap{max-width:1000px;margin:auto;padding:0 14px}
+h1{font-size:22px;margin:0 0 5px}.sub{opacity:.85;font-size:13px}
+.stats{display:flex;gap:8px;margin-top:15px;flex-wrap:wrap}.stat{background:#ffffff20;padding:8px 12px;border-radius:12px;font-size:12px}
+nav{display:flex;gap:8px;margin:14px 0;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:11px 14px;font-weight:700;flex:1}
+.tab.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 3px 14px #173b3b08}
+.searchrow{display:grid;grid-template-columns:1fr;gap:9px}
+input,select{font:inherit;border:1px solid var(--line);border-radius:11px;padding:12px;background:#fff;color:var(--ink);width:100%;outline:none}
+input:focus,select:focus{border-color:var(--brand);box-shadow:0 0 0 3px #0f766e18}
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.muted{color:var(--muted);font-size:12px}.result-head{display:flex;justify-content:space-between;align-items:center;margin:14px 2px 8px;gap:8px}
+.product{display:flex;align-items:center;gap:10px;padding:12px 2px;border-bottom:1px solid var(--line)}
+.product:last-child{border-bottom:0}.pinfo{min-width:0;flex:1}.pname{font-weight:700;font-size:14px;line-height:1.5}.meta{font-size:12px;color:var(--muted);margin-top:3px}
+.add,.remove,.primary,.secondary{border:0;border-radius:11px;padding:10px 13px;font-weight:700;cursor:pointer}
+.add{background:var(--soft);color:var(--brand);white-space:nowrap}.add.added{background:#e9f6ec;color:#237a3b}
+.primary{background:var(--brand);color:white}.primary:disabled{opacity:.45;cursor:not-allowed}.secondary{background:#eef2f2;color:#304444}.remove{background:#fff0ee;color:var(--danger);padding:8px 10px}
+.empty{text-align:center;padding:35px 10px;color:var(--muted)}
+.hidden{display:none!important}.cartline{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.actions>*{flex:1}
+label{font-size:13px;font-weight:700;display:block;margin:10px 0 6px}
+.notice{background:#e7f4f2;border:1px solid #cce6e2;border-radius:12px;padding:10px;font-size:12px;line-height:1.6;color:#245b55}
+.brand-group{margin:12px 0;border:1px solid var(--line);border-radius:12px;padding:10px}
+.brand-title{font-weight:800;color:var(--brand);font-size:14px;padding:3px 0 8px;border-bottom:1px solid var(--line);margin-bottom:4px}
+@media(min-width:700px){.searchrow{grid-template-columns:1fr 190px}.filters{grid-template-columns:1fr 1fr 1fr}.products{display:grid;grid-template-columns:1fr 1fr;column-gap:18px}.product{align-items:flex-start}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>كتالوج الكوزمتكس</h1><div class="sub">ابحث عن الأصناف، اختار اللي محتاجه، وابعتها مباشرة على واتساب</div>
+<div class="stats"><div class="stat">قاعدة البيانات: <b id="totalCount">جارٍ التحميل...</b></div><div class="stat">المختار: <b id="cartCount">0</b></div></div>
+</div></header>
+<main class="wrap">
+<nav>
+<button class="tab active" id="searchTab" onclick="showPage('search')">البحث عن الأصناف</button>
+<button class="tab" id="cartTab" onclick="showPage('cart')">القائمة المختارة (<span id="navCount">0</span>)</button>
+</nav>
+<section id="searchPage">
+<div class="panel">
+<div class="searchrow">
+<input id="q" type="search" placeholder="ابحث باسم الصنف أو البراند..." autocomplete="off">
+<select id="brandFilter"><option value="">كل البراندات</option></select>
+</div>
+<div class="filters">
+<select id="categoryFilter"><option value="">كل التصنيفات</option></select>
+<select id="sortFilter"><option value="name">ترتيب حسب الاسم</option><option value="brand">ترتيب حسب البراند</option></select>
+</div>
+<div class="muted" style="margin-top:9px">اكتب جزء من اسم المنتج أو البراند. تقدر تضيف أكتر من صنف للقائمة.</div>
+</div>
+<div class="result-head"><b>نتائج البحث</b><span class="muted" id="resultCount">0 نتيجة</span></div>
+<div class="panel"><div id="products" class="products"><div class="empty">جاري تحميل قاعدة البيانات...</div></div>
+<div class="actions"><button class="secondary" id="moreBtn" onclick="showMore()">عرض المزيد</button></div></div>
+</section>
+<section id="cartPage" class="hidden">
+<div class="panel">
+<div class="result-head"><b>الأصناف المختارة</b><button class="remove" onclick="clearCart()">مسح الكل</button></div>
+<div id="cartItems"><div class="empty">لسه مفيش أصناف في القائمة.</div></div>
+<div class="notice" style="margin-top:12px">اسم كل براند هيظهر مرة واحدة فوق أصنافه، من غير كميات أو تكرار اسم البراند مع كل صنف.</div>
+<div class="actions">
+<button class="primary" id="sendBtn" onclick="sendWhatsApp()">فتح واتساب واختيار المستلم</button>
+<button class="secondary" onclick="copyMessage()">نسخ الرسالة</button>
+</div>
+<div id="sendHint" class="muted" style="margin-top:8px"></div>
+</div>
+</section>
+</main>
+<footer>كتالوج أصناف الكوزمتكس · البيانات محمّلة محليًا داخل التطبيق</footer>
+<script>
+let allProducts=[], cart={}, shown=60;
+const $=id=>document.getElementById(id);
+function norm(s){return String(s??'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[ًٌٍَُِّْـ]/g,'').replace(/\\s+/g,' ').trim()}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function loadCart(){try{cart=JSON.parse(localStorage.getItem('cosmetics_cart_v2')||'{}')||{}}catch(e){cart={}}}
+function saveCart(){localStorage.setItem('cosmetics_cart_v2',JSON.stringify(cart));updateCounts()}
+function updateCounts(){let n=Object.keys(cart).length;$('cartCount').textContent=n;$('navCount').textContent=n}
+async function init(){
+ loadCart();
+ try{
+  // جرّب أكثر من مكان شائع لملف JSON حتى لا نطلب من المستخدم إعادة رفع كل المشروع
+  const candidates = [
+    './data/products.json',
+    './products.json',
+    './cosmetics-reference-978e7a20.json',
+    './data/cosmetics-reference-978e7a20.json'
+  ];
+  let data = null, lastError = null;
+  for (const path of candidates) {
+    try {
+      const response = await fetch(path, {cache:'no-store'});
+      if (!response.ok) { lastError = new Error(path + ' : ' + response.status); continue; }
+      data = await response.json();
+      break;
+    } catch (err) { lastError = err; }
+  }
+  if (!data) throw new Error('ملف JSON غير موجود في المسارات المتوقعة. آخر خطأ: ' + (lastError?.message || 'unknown'));
+  allProducts=Array.isArray(data)?data:(data.products||[]);
+  $('totalCount').textContent=allProducts.length.toLocaleString('en-US');
+  const brands=[...new Set(allProducts.map(p=>p.brand).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  brands.forEach(b=>$('brandFilter').add(new Option(b,b)));
+  const cats=[...new Set(allProducts.map(p=>p.category_ar||p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  cats.forEach(c=>$('categoryFilter').add(new Option(c,c)));
+  renderProducts();renderCart();updateCounts();
+ }catch(e){$('products').innerHTML='<div class="empty">تعذر تحميل قاعدة البيانات. تأكد أن ملف JSON موجود بجانب index.html باسم products.json أو داخل مجلد data باسم products.json.</div>';$('totalCount').textContent='—';$('sendHint').textContent=e.message}
+}
+function filtered(){
+ const q=norm($('q').value),brand=$('brandFilter').value,cat=$('categoryFilter').value;
+ let a=allProducts.filter(p=>(!brand||p.brand===brand)&&(!cat||(p.category_ar||p.category)===cat));
+ if(q)a=a.filter(p=>norm([p.name,p.brand,p.brand_ar,p.category_ar,p.size,p.description].join(' ')).includes(q));
+ if($('sortFilter').value==='brand')a.sort((x,y)=>(x.brand||'').localeCompare(y.brand||'')||(x.name||'').localeCompare(y.name||''));
+ else a.sort((x,y)=>(x.name||'').localeCompare(y.name||''));
+ return a;
+}
+function renderProducts(){
+ const a=filtered();$('resultCount').textContent=a.length.toLocaleString('en-US')+' نتيجة';
+ const slice=a.slice(0,shown);
+ $('products').innerHTML=slice.length?slice.map(p=>{
+  const added=!!cart[p.id];
+  return `<article class="product"><div class="pinfo"><div class="pname">${esc(p.name)}</div><div class="meta">${esc(p.brand||'براند غير محدد')} · ${esc(p.size||'الحجم غير محدد')} · ${esc(p.category_ar||p.category||'')}</div></div><button class="add ${added?'added':''}" onclick="toggleItem('${esc(p.id)}')">${added?'✓ تمت الإضافة':'+ إضافة'}</button></article>`
+ }).join(''):'<div class="empty">مفيش نتائج مطابقة لبحثك.</div>';
+ $('moreBtn').classList.toggle('hidden',a.length<=shown);
+ $('moreBtn').textContent=`عرض المزيد (${Math.min(60,a.length-shown)}+)`;
+}
+function showMore(){shown+=60;renderProducts()}
+function toggleItem(id){const p=allProducts.find(x=>x.id===id);if(!p)return;if(cart[id])delete cart[id];else cart[id]={id:p.id,name:p.name,brand:p.brand,size:p.size,category_ar:p.category_ar};saveCart();renderProducts();renderCart()}
+function groupedItems(){
+ const groups={};
+ Object.values(cart).forEach(p=>{const b=(p.brand||'براند غير محدد').trim();(groups[b]??=[]).push(p)});
+ return Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0]));
+}
+function renderCart(){
+ const groups=groupedItems();
+ $('cartItems').innerHTML=groups.length?groups.map(([brand,items])=>`<div class="brand-group"><div class="brand-title">${esc(brand)}</div>${items.map(p=>`<div class="cartline"><div class="pinfo"><div class="pname">${esc(p.name)}</div><div class="meta">${esc(p.size||'')}</div></div><button class="remove" onclick="removeItem('${esc(p.id)}')">حذف</button></div>`).join('')}</div>`).join(''):'<div class="empty">لسه مفيش أصناف في القائمة.</div>';
+ $('sendBtn').disabled=!groups.length;
+}
+function removeItem(id){delete cart[id];saveCart();renderCart();renderProducts()}
+function clearCart(){if(!Object.keys(cart).length)return;if(confirm('متأكد إنك عايز تمسح كل الأصناف؟')){cart={};saveCart();renderCart();renderProducts()}}
+function messageText(){
+ const intro='قائمة الأصناف المطلوبة';
+ return intro+'\\n\\n'+groupedItems().map(([brand,items])=>brand+'\\n'+items.map(p=>'• '+p.name+(p.size?' ('+p.size+')':'')).join('\\n')).join('\\n\\n');
+}
+function copyMessage(){if(!Object.keys(cart).length){$('sendHint').textContent='أضف أصناف الأول.';return}const t=messageText();if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>$('sendHint').textContent='تم نسخ الرسالة.').catch(()=>fallbackCopy(t))}else fallbackCopy(t)}
+function fallbackCopy(t){const x=document.createElement('textarea');x.value=t;document.body.appendChild(x);x.select();try{document.execCommand('copy');$('sendHint').textContent='تم نسخ الرسالة.'}catch(e){$('sendHint').textContent='تعذر النسخ تلقائيًا.'}x.remove()}
+function sendWhatsApp(){
+ if(!Object.keys(cart).length)return;
+ const url='https://wa.me/?text='+encodeURIComponent(messageText());
+ window.location.href=url;
+}
+function showPage(page){$('searchPage').classList.toggle('hidden',page!=='search');$('cartPage').classList.toggle('hidden',page!=='cart');$('searchTab').classList.toggle('active',page==='search');$('cartTab').classList.toggle('active',page==='cart');if(page==='cart')renderCart();window.scrollTo({top:0,behavior:'smooth'})}
+['q','brandFilter','categoryFilter','sortFilter'].forEach(id=>$(id).addEventListener(id==='q'?'input':'change',()=>{shown=60;renderProducts()}));
+init();
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?ver=3').catch(()=>{}));
+</script>
+</body></html>
